@@ -4,7 +4,7 @@
 #include "Arrow.h"
 #include "Light.h"
 #include <iostream>
-
+#include "GameOver.h"
 
 using namespace std;
 
@@ -40,6 +40,9 @@ Material mtl2;
 Material mtl3;
 Material mtl4;
 Arrow arrow;
+
+//gameover
+GameOver g;
 
 void init() {
 	//light init
@@ -115,6 +118,9 @@ void init() {
 }
 
 void idle() {
+	
+	
+
 	endt = clock();
 	if (endt - start > 1000 / 60) {
 		//collision handling
@@ -178,6 +184,7 @@ void idle() {
 		};
 		start = endt;
 	}
+
 	glutPostRedisplay();
 }
 
@@ -247,6 +254,7 @@ void keyboard(unsigned char key, int x, int y) {
 	if (key == 27) {
 		exit(0);
 	}
+
 	glutPostRedisplay();
 }
 
@@ -298,27 +306,34 @@ void renderScene() {
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
+	
+
 	//light setting
 	light->draw();
 
 	//arrow
 	arrow.draw();
 	
-	//spheres
-	for (auto sph : spheres)
-		sph.draw();
-	//nextsphere
-	nextspheres.back().draw();
-
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_LIGHT0);
-
+		//spheres
+		for (auto sph : spheres)
+			sph.draw();
+		//nextsphere
+		nextspheres.back().draw();
+	
+	
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_LIGHTING);
+			glDisable(GL_LIGHT0);
+		
 	//characters
 	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "SCORE : ", textframe[0] -250, textframe[1]+20);
 	draw_characters(GLUT_BITMAP_HELVETICA_18, "TIME", textframe[0] + 0, textframe[1]+50);
 	draw_characters(GLUT_BITMAP_HELVETICA_18, "NEXT", -280, -320);
-
+	
+	if (g.GameOverDetection(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT) == true)
+		draw_characters(GLUT_BITMAP_HELVETICA_18, "Game Over", 0, 0);
+			
+	if (g.GameOverDetection(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT) == false)
 	glutSwapBuffers();
 }
 
@@ -332,13 +347,20 @@ int main(int argc, char** argv) {
 	init();
 
 	// register callbacks
-	glutDisplayFunc(renderScene);
-	glutKeyboardFunc(keyboard);
-	glutSpecialFunc(Specialkeyboard);
-	glutIdleFunc(idle);
-
+	
+		glutDisplayFunc(renderScene);
+		glutKeyboardFunc(keyboard);
+		glutSpecialFunc(Specialkeyboard);
+		glutIdleFunc(idle);
+	
 	// enter GLUT event processing cycle
-	glutMainLoop();
+		
+		glutMainLoop();
+			
+		
+		
+		
+		
 
 	return 0;
 }
