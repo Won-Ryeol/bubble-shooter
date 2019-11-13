@@ -22,7 +22,7 @@ float timebarindex = 0;
 //frame position
 Vector3 startcenter(0, -310, 0);
 Vector3 nextspherecenter(-215, -350, 0);
-Vector3 textframe(35, 300, 0);
+Vector3 textframe(40, 300, 0);
 
 //power setting
 float shootpower = 25;
