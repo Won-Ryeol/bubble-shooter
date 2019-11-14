@@ -3,7 +3,9 @@
 class GameOver 
 {
 public:
-	bool GameOverDetection(SolidSphere sph, float height);
+	GameOver();
+	void operator()(SolidSphere sph, float height);
+	bool getover();
 private:
 	bool over = false;
 };

@@ -1,9 +1,10 @@
+#include <iostream>
 #include <vector>
 #include <time.h>
+#include <Windows.h>
 #include "SolidSphere.h"
 #include "Arrow.h"
 #include "Light.h"
-#include <iostream>
 #include "GameOver.h"
 
 using namespace std;
@@ -22,7 +23,7 @@ float timebarindex = 0;
 //frame position
 Vector3 startcenter(0, -310, 0);
 Vector3 nextspherecenter(-215, -350, 0);
-Vector3 textframe(40, 300, 0);
+Vector3 textframe(30, 300, 0);
 
 //power setting
 float shootpower = 25;
@@ -35,6 +36,7 @@ vector<SolidSphere> spheres;
 vector<SolidSphere> nextspheres;
 Light* light;
 Material defaultmtl;
+Material gameovermtl;
 Material mtl1;
 Material mtl2;
 Material mtl3;
@@ -57,6 +59,12 @@ void init() {
 	defaultmtl.setDiffuse(0.5, 0.5, 0.5, 1);
 	defaultmtl.setSpecular(1.0, 1.0, 1.0, 1);
 	defaultmtl.setShininess(10);
+		//gameover
+	gameovermtl.setEmission(0.1, 0.1, 0.1, 1);
+	gameovermtl.setAmbient(0.1, 0.1, 0.1, 1);
+	gameovermtl.setDiffuse(0.1, 0.1, 0.1, 1);
+	gameovermtl.setSpecular(1.0, 1.0, 1.0, 1);
+	gameovermtl.setShininess(10);
 		//emerald
 	mtl1.setEmission(0.1, 0.1, 0.1, 1);
 	mtl1.setAmbient(0.0215, 0.1745, 0.0215, 1.0);
@@ -118,17 +126,21 @@ void init() {
 }
 
 void idle() {
-	
-	
-
 	endt = clock();
 	if (endt - start > 1000 / 60) {
+		//gameover detection
+		g(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT);
+
+		//gameover mtl effect
+		if (g.getover())
+		{
+			static int i = spheres.size() - 1;
+			spheres[i].setMTL(gameovermtl);
+			if (i>0)
+				i--;
+		}
+
 		//collision handling
-		/*
-		for (int i = 0; i < spheres.size() - 1; i++)
-			for (int j = i + 1; j < spheres.size() - 1; j++)
-				spheres[i].collisionHandling(spheres[j]);
-		*/
 		for (int i = 0; i < spheres.size(); i++)
 		{
 			spheres[i].move();
@@ -152,7 +164,8 @@ void idle() {
 		}
 
 		//auto shooting
-		timebarindex = timebarindex + (timebarindex >= 150 ? 0 : timebarrate);
+		if(g.getover() != true)
+			timebarindex = timebarindex + (timebarindex >= 150 ? 0 : timebarrate);
 		if (timebarindex >= 150) {
 			spheres.back().setVelocity(shootpower * sin(arrow.getAngleOfArrow() / 57.29577951), shootpower * cos(arrow.getAngleOfArrow() / 57.29577951), 0);
 
@@ -182,18 +195,19 @@ void idle() {
 			}
 			timebarindex = 0;
 		};
+
 		start = endt;
 	}
-
 	glutPostRedisplay();
 }
 
 void Specialkeyboard(int key, int x, int y) {
-	if (key == GLUT_KEY_LEFT) { if (arrow.getAngleOfArrow() > -70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() - anglemovementrate); } }
+	if (key == GLUT_KEY_LEFT && g.getover()!=true) { if (arrow.getAngleOfArrow() > -70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() - anglemovementrate); } }
 
-	else if (key == GLUT_KEY_RIGHT) { if (arrow.getAngleOfArrow() < 70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() + anglemovementrate); } }
+	else if (key == GLUT_KEY_RIGHT && g.getover() != true) { if (arrow.getAngleOfArrow() < 70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() + anglemovementrate); } }
 
-	else if (key == GLUT_KEY_DOWN) {
+	//KEY_DOWN have to be deleted
+	else if (key == GLUT_KEY_DOWN && g.getover() != true) {
 		if (size(spheres) > 1)
 		{
 			Material n = spheres.back().getMTL();
@@ -214,12 +228,11 @@ void Specialkeyboard(int key, int x, int y) {
 			timebarindex = 0;
 		}
 	}
-
 	glutPostRedisplay();
 }
 
 void keyboard(unsigned char key, int x, int y) {
-	if (spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)].getVelocity()[1] == 0) {
+	if (spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)].getVelocity()[1] == 0 && g.getover() != true) {
 		if (key == 32) {
 			spheres.back().setVelocity(shootpower * sin(arrow.getAngleOfArrow() / 57.29577951), shootpower * cos(arrow.getAngleOfArrow() / 57.29577951), 0);
 
@@ -319,21 +332,17 @@ void renderScene() {
 	for (auto sph : spheres)
 		sph.draw();
 
-
-	
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_LIGHT0);
 		
 	//characters
+	if (g.getover())
+		draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 300);
+
 	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "SCORE : ", textframe[0] -250, textframe[1]+20);
 	draw_characters(GLUT_BITMAP_HELVETICA_18, "TIME", textframe[0] + 0, textframe[1]+50);
 	draw_characters(GLUT_BITMAP_HELVETICA_18, "NEXT", -280, -320);
-	
-	if (g.GameOverDetection(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT) == true)
-		draw_characters(GLUT_BITMAP_HELVETICA_18, "Game Over", 0, 0);
-			
-	if (g.GameOverDetection(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT) == false)
 
 	glutSwapBuffers();
 }
@@ -348,20 +357,12 @@ int main(int argc, char** argv) {
 	init();
 
 	// register callbacks
-	
-		glutDisplayFunc(renderScene);
-		glutKeyboardFunc(keyboard);
-		glutSpecialFunc(Specialkeyboard);
-		glutIdleFunc(idle);
+	glutDisplayFunc(renderScene);
+	glutKeyboardFunc(keyboard);
+	glutSpecialFunc(Specialkeyboard);
+	glutIdleFunc(idle);
 	
 	// enter GLUT event processing cycle
-		
-		glutMainLoop();
-			
-		
-		
-		
-		
-
+	glutMainLoop();
 	return 0;
 }
