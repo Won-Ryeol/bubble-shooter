@@ -10,4 +10,6 @@ void GameOver::operator()(SolidSphere sph, float height)
 
 bool GameOver::getover() { return over; };
 
+void GameOver::reset() { over=false; };
+
 //if (spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)].getVelocity()[1] == 0)

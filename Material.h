@@ -23,6 +23,7 @@ public:
 	const float* getSpecular() const;
 	const float* getShininess() const;
 
+	bool operator==(Material a);
 private:
 	float emission[4];
 	float ambient[4];

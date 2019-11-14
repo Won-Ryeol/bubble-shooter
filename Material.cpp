@@ -79,3 +79,12 @@ const float* Material::getSpecular() const {
 const float* Material::getShininess() const {
 	return shininess;
 }
+
+bool  Material::operator==(Material a) {
+	return (
+		emission[0] == a.emission[0] && ambient[0] == a.ambient[0] && diffuse[0] == a.diffuse[0] && specular[0] == a.specular[0] && shininess[0] == a.shininess[0] &&
+		emission[1] == a.emission[1] && ambient[1] == a.ambient[1] && diffuse[1] == a.diffuse[1] && specular[1] == a.specular[1] &&
+		emission[2] == a.emission[2] && ambient[2] == a.ambient[2] && diffuse[2] == a.diffuse[2] && specular[2] == a.specular[2] &&
+		emission[3] == a.emission[3] && ambient[3] == a.ambient[3] && diffuse[3] == a.diffuse[3] && specular[3] == a.specular[3] 
+		);
+};

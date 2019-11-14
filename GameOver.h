@@ -6,6 +6,7 @@ public:
 	GameOver();
 	void operator()(SolidSphere sph, float height);
 	bool getover();
+	void reset();
 private:
 	bool over = false;
 };

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <time.h>
-#include <Windows.h>
 #include "SolidSphere.h"
 #include "Arrow.h"
 #include "Light.h"
@@ -132,14 +131,23 @@ void idle() {
 		g(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT);
 
 		//gameover mtl effect
+
+		static int j = 0;
+		static bool now = 0;
+		static bool before = 0;
+		now = g.getover();
+		if (now > before) { j++; };
+		before = g.getover(); //gameover될 때마다 j가 1씩 커진다.
+
 		if (g.getover())
-		{
-			static int i = spheres.size() - 1;
+		{	static int i = spheres.size() - 1;
+			static int jin = j;
+			if (jin != j) { i = spheres.size() - 1; jin = j; };
 			spheres[i].setMTL(gameovermtl);
-			if (i>0)
+			if (i > 0)
 				i--;
 		}
-
+		
 		//collision handling
 		for (int i = 0; i < spheres.size(); i++)
 		{
@@ -205,7 +213,7 @@ void Specialkeyboard(int key, int x, int y) {
 	if (key == GLUT_KEY_LEFT && g.getover()!=true) { if (arrow.getAngleOfArrow() > -70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() - anglemovementrate); } }
 
 	else if (key == GLUT_KEY_RIGHT && g.getover() != true) { if (arrow.getAngleOfArrow() < 70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() + anglemovementrate); } }
-
+	
 	//KEY_DOWN have to be deleted
 	else if (key == GLUT_KEY_DOWN && g.getover() != true) {
 		if (size(spheres) > 1)
@@ -263,6 +271,14 @@ void keyboard(unsigned char key, int x, int y) {
 			timebarindex = 0;
 		};
 	};
+	if (key == 13 && g.getover()) {
+		g.reset();
+		while(spheres.size()>0)
+			spheres.pop_back();
+		nextspheres.pop_back();
+		timebarindex = 0;
+		init();
+	};
 
 	if (key == 27) {
 		exit(0);
@@ -271,8 +287,8 @@ void keyboard(unsigned char key, int x, int y) {
 	glutPostRedisplay();
 }
 
-void draw_characters(void* font, const char* c, float x, float y) {
-	glColor3f(1.0, 1.0, 1.0);
+void draw_characters(void* font, const char* c, float x, float y, float r, float g, float b) {
+	glColor3f(r, g, b);
 	glRasterPos2f(x, y);
 	for (int i = 0; i < strlen(c); i++)
 		glutBitmapCharacter(font, c[i]);
@@ -338,11 +354,18 @@ void renderScene() {
 		
 	//characters
 	if (g.getover())
-		draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 300);
-
-	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "SCORE : ", textframe[0] -250, textframe[1]+20);
-	draw_characters(GLUT_BITMAP_HELVETICA_18, "TIME", textframe[0] + 0, textframe[1]+50);
-	draw_characters(GLUT_BITMAP_HELVETICA_18, "NEXT", -280, -320);
+	{
+		static int i;
+		draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 300, 1 ,0 ,0);
+		if (spheres[0].getMTL() == gameovermtl && i<180)
+			draw_characters(GLUT_BITMAP_HELVETICA_18, "Press Enter to Restart", textframe[0] - 120, textframe[1] - 350 ,0,1,1);
+		if (i >= 360)
+			i = 0;
+		i++;
+	}
+	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "SCORE : ", textframe[0] -250, textframe[1]+20, 1, 1, 1);
+	draw_characters(GLUT_BITMAP_HELVETICA_18, "TIME", textframe[0] + 0, textframe[1]+50, 1, 1, 1);
+	draw_characters(GLUT_BITMAP_HELVETICA_18, "NEXT", -280, -320, 1, 1, 1);
 
 	glutSwapBuffers();
 }
