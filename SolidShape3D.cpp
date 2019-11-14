@@ -1,6 +1,4 @@
 #include "SolidShape3D.h"
-#include <time.h>
-//error  #include <iostream> 
 
 SolidShape3D::SolidShape3D() {
 	center.setXYZ(0, 0, 0);
@@ -59,19 +57,4 @@ Material SolidShape3D::getMTL() const { return mtl; };
 
 void SolidShape3D::setMTL(Material mat) {
 	mtl = mat;
-}
-
-/*
-void SolidShape3D::setRandMTL4(Material a, Material b, Material c, Material d) {
-		
-	srand((unsigned int)time(0)); 
-	
-	switch (rand() % 4 + 1)
-	{
-	case 1: mtl = a; break;
-	case 2: mtl = b; break;
-	case 3: mtl = c; break;
-	case 4: mtl = d; break;
-	}
-}
-*/
+};

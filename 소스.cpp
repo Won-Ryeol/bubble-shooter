@@ -306,24 +306,24 @@ void renderScene() {
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	
-
 	//light setting
 	light->draw();
 
 	//arrow
 	arrow.draw();
+
+	//nextsphere
+	nextspheres.back().draw();
+
+	//spheres
+	for (auto sph : spheres)
+		sph.draw();
+
+
 	
-		//spheres
-		for (auto sph : spheres)
-			sph.draw();
-		//nextsphere
-		nextspheres.back().draw();
-	
-	
-			glDisable(GL_DEPTH_TEST);
-			glDisable(GL_LIGHTING);
-			glDisable(GL_LIGHT0);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_LIGHT0);
 		
 	//characters
 	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "SCORE : ", textframe[0] -250, textframe[1]+20);
@@ -334,6 +334,7 @@ void renderScene() {
 		draw_characters(GLUT_BITMAP_HELVETICA_18, "Game Over", 0, 0);
 			
 	if (g.GameOverDetection(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT) == false)
+
 	glutSwapBuffers();
 }
 

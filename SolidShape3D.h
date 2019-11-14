@@ -3,7 +3,6 @@
 #include "Material.h"
 #include "Vector3.h"
 
-
 class SolidShape3D
 {
 public:
@@ -20,7 +19,6 @@ public:
 	void setMTL();
 	void setMTL(Material mtl);
 	Material getMTL() const;
-	//void setRandMTL4(Material a, Material b, Material c, Material d);
 	virtual void draw() const = 0;
 
 protected:

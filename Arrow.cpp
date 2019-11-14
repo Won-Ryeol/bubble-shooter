@@ -33,6 +33,7 @@ void Arrow::draw() const {
 
 	glPushMatrix();
 
+	glShadeModel(GL_SMOOTH);
 	glMaterialfv(GL_FRONT, GL_EMISSION, mtl.getEmission());
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mtl.getAmbient());
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mtl.getDiffuse());
