@@ -1,7 +1,10 @@
 #pragma once
 
+#include <iostream>
+#include <time.h>
 #include "Material.h"
 #include "Vector3.h"
+
 
 class SolidShape3D
 {
@@ -18,6 +21,7 @@ public:
 	void move();
 	void setMTL();
 	void setMTL(Material mtl);
+	void setRandomMTL4(Material mtl1, Material mtl2, Material mtl3, Material mtl4);
 	Material getMTL() const;
 	virtual void draw() const = 0;
 

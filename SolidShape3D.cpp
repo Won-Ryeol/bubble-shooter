@@ -53,6 +53,19 @@ void SolidShape3D::setMTL() {
 	mtl.setShininess(10);
 }
 
+void SolidShape3D::setRandomMTL4(Material mtl1, Material mtl2, Material mtl3, Material mtl4) {
+	srand((unsigned int)time(0));
+
+	switch (rand() % 4 + 1)
+	{
+		case 1: setMTL(mtl1); break;
+		case 2: setMTL(mtl2); break;
+		case 3: setMTL(mtl3); break;
+		case 4: setMTL(mtl4); break;
+	}
+};
+
+
 Material SolidShape3D::getMTL() const { return mtl; };
 
 void SolidShape3D::setMTL(Material mat) {

@@ -26,7 +26,7 @@ Vector3 textframe(30, 300, 0);
 
 //power setting
 float shootpower = 25;
-float anglemovementrate = 7.5;
+float anglemovementrate = 5;
 float timebarrate = 1;
 float radious = 30;
 
@@ -34,12 +34,7 @@ float radious = 30;
 vector<SolidSphere> spheres;
 vector<SolidSphere> nextspheres;
 Light* light;
-Material defaultmtl;
-Material gameovermtl;
-Material mtl1;
-Material mtl2;
-Material mtl3;
-Material mtl4;
+Material mtl1, mtl2, mtl3, mtl4, defaultmtl, gameovermtl;
 Arrow arrow;
 
 //gameover
@@ -58,7 +53,7 @@ void init() {
 	defaultmtl.setDiffuse(0.5, 0.5, 0.5, 1);
 	defaultmtl.setSpecular(1.0, 1.0, 1.0, 1);
 	defaultmtl.setShininess(10);
-		//gameover
+		//gameovermtl
 	gameovermtl.setEmission(0.1, 0.1, 0.1, 1);
 	gameovermtl.setAmbient(0.1, 0.1, 0.1, 1);
 	gameovermtl.setDiffuse(0.1, 0.1, 0.1, 1);
@@ -90,31 +85,17 @@ void init() {
 	mtl4.setShininess(76.8);
 
 	//sphere init
-	srand((unsigned int)time(0));
-
 	SolidSphere sphere1(radious, 100, 10);
 	sphere1.setCenter(startcenter);
 	sphere1.setVelocity(0, 0, 0);
-	switch (rand() % 4 + 1)
-	{
-	case 1: sphere1.setMTL(mtl1); break;
-	case 2: sphere1.setMTL(mtl2); break;
-	case 3: sphere1.setMTL(mtl3); break;
-	case 4: sphere1.setMTL(mtl4); break;
-	}
+	sphere1.setRandomMTL4(mtl1, mtl2, mtl3, mtl4);
 	spheres.push_back(sphere1);
 
 	//nextsphere init
 	SolidSphere nextsphere(radious, 100, 10);
 	nextsphere.setCenter(nextspherecenter);
 	nextsphere.setVelocity(0, 0, 0);
-	switch (rand() % 4 + 1)
-	{
-	case 1: nextsphere.setMTL(mtl1);break;
-	case 2: nextsphere.setMTL(mtl2);break;
-	case 3: nextsphere.setMTL(mtl3);break;
-	case 4: nextsphere.setMTL(mtl4);break;
-	}
+	nextsphere.setRandomMTL4(mtl1, mtl2, mtl3, mtl4);
 	nextspheres.push_back(nextsphere);
 	
 	//Arrow
@@ -131,7 +112,6 @@ void idle() {
 		g(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT);
 
 		//gameover mtl effect
-
 		static int j = 0;
 		static bool now = 0;
 		static bool before = 0;
@@ -154,21 +134,19 @@ void idle() {
 			spheres[i].move();
 
 			if (abs(spheres[i].getCenter()[0]) >= boundaryX - spheres[i].getProperties()[0]) {
-				Vector3 afterx(spheres[i].getVelocity());
-				afterx[0] = -afterx[0];
-				spheres[i].setVelocity(afterx);
+				spheres[i].setVelocity(Vector3(-spheres[i].getVelocity()[0], spheres[i].getVelocity()[1], spheres[i].getVelocity()[2]));
 			}
 			else if ((spheres[i].getCenter()[1] >= boundaryY - 150 - spheres[i].getProperties()[0]) && spheres[i].getmoved() != true) {
 				spheres[i].setVelocity(0, 0, 0);
-				int yposint = (spheres[i].getCenter()[0] + boundaryX) / (2 * radious);
-				spheres[i].setCenter(radious * (2 * yposint + 1) - boundaryX, 250 - radious, 0);
+				int xpos_int = (spheres[i].getCenter()[0] + boundaryX) / (2 * radious);
+				spheres[i].setCenter(radious * (2 * xpos_int + 1) - boundaryX, 250 - radious, 0);
 				spheres[i].aftercollision();
 			};
 		};
 
 		if (spheres.size() > 2) {
 			for (int i = 0; i < spheres.size() - 2; i++)
-			spheres[i].collisionHandling(spheres[spheres.size() - 2]);
+				spheres[i].collisionHandling(spheres[spheres.size() - 2]);
 		}
 
 		//auto shooting
@@ -178,32 +156,15 @@ void idle() {
 			spheres.back().setVelocity(shootpower * sin(arrow.getAngleOfArrow() / 57.29577951), shootpower * cos(arrow.getAngleOfArrow() / 57.29577951), 0);
 
 			SolidSphere s(radious, 100, 10);
-
 			s.setCenter(startcenter);
 			s.setVelocity(0, 0, 0);
 			s.setMTL(nextspheres[0].getMTL());
-
 			spheres.push_back(s);
+			
+			nextspheres[0].setRandomMTL4(mtl1, mtl2, mtl3, mtl4);
 
-			srand((unsigned int)time(0));
-
-			switch (rand() % 4 + 1)
-			{
-			case 1: nextspheres[0].setMTL(mtl1);
-				break;
-
-			case 2: nextspheres[0].setMTL(mtl2);
-				break;
-
-			case 3: nextspheres[0].setMTL(mtl3);
-				break;
-
-			case 4: nextspheres[0].setMTL(mtl4);
-				break;
-			}
 			timebarindex = 0;
 		};
-
 		start = endt;
 	}
 	glutPostRedisplay();
@@ -252,22 +213,8 @@ void keyboard(unsigned char key, int x, int y) {
 
 			spheres.push_back(s);
 			
-			srand((unsigned int)time(0));
+			nextspheres[0].setRandomMTL4(mtl1, mtl2, mtl3, mtl4);
 
-			switch (rand() % 4 + 1)
-			{
-				case 1: nextspheres[0].setMTL(mtl1);
-				break;
-
-				case 2: nextspheres[0].setMTL(mtl2);
-				break;
-
-				case 3: nextspheres[0].setMTL(mtl3);
-				break;
-
-				case 4: nextspheres[0].setMTL(mtl4);
-				break;
-			}
 			timebarindex = 0;
 		};
 	};

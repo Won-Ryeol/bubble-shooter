@@ -23,38 +23,21 @@ bool SolidSphere::collisionDetection(const SolidSphere& sph) {
 void SolidSphere::collisionHandling(SolidSphere& sph) {
 	if (collisionDetection(sph) && sph.moved != true) {
 
-		Vector3 zero(0,0,0);
-		sph.velocity = zero;
+		sph.setVelocity(0,0,0);
 		
 		Vector3 d = center - sph.center;
-		Vector3 xaxis(1, 0, 0);
+		float cosvalue = d[0] / sqrt(dotProduct(d, d));
 		float r = properties[0];
 		float k = sqrt(3) / 2;
+		if      (sph.center[0] < -9 * r) { sph.setCenter(center + Vector3(r, -2 * r * k, 0)); }  //left boundary
+		else if (sph.center[0] > 9 * r)  { sph.setCenter(center + Vector3(-r, -2 * r * k, 0)); } //right boundary
 
-		if (k <= (dotProduct(d, xaxis) / (2 * r)) && (dotProduct(d, xaxis) / (2 * r)) <= 1) {
-			Vector3 left(-2 * r, 0, 0);
-			sph.setCenter(center + left);
-		}
-		else if (0 <= (dotProduct(d, xaxis) / (2 * r)) && (dotProduct(d, xaxis) / (2 * r)) <= k && d.getXYZ()[1]>0) {
-			Vector3 downleft(-r, -2*r*k, 0);
-			sph.setCenter(center + downleft);
-		}
-		else if ( - k<= (dotProduct(d, xaxis) / (2 * r)) && (dotProduct(d, xaxis) / (2 * r)) <= 0 && d.getXYZ()[1] > 0) {
-			Vector3 downright(r, -2*r*k, 0);
-			sph.setCenter(center + downright);
-		}
-		else if (0 <= (dotProduct(d, xaxis) / (2 * r)) && (dotProduct(d, xaxis) / (2 * r)) <= k && d.getXYZ()[1] < 0) {
-			Vector3 upleft(-r, 2 * r * k, 0);
-			sph.setCenter(center + upleft);
-		}
-		else if (-k <= (dotProduct(d, xaxis) / (2 * r)) && (dotProduct(d, xaxis) / (2 * r)) <= 0 && d.getXYZ()[1] < 0) {
-			Vector3 upright(r, 2 * r * k, 0);
-			sph.setCenter(center + upright);
-		}
-		else if ( -1 <= (dotProduct(d, xaxis) / (2 * r)) && (dotProduct(d, xaxis) / (2 * r)) <= -k) {
-			Vector3 right(2 * r, 0, 0);
-			sph.setCenter(center + right);
-		};
+		else if	  (k <= cosvalue && cosvalue <= 1)			    	{sph.setCenter(center + Vector3(-2 * r, 0, 0));}		//left
+		else if   (0 <= cosvalue && cosvalue <= k && d[1] > 0)		{sph.setCenter(center + Vector3(-r, -2 * r * k, 0));}   //downleft
+		else if   (0 <= cosvalue && cosvalue <= k && d[1] < 0)      {sph.setCenter(center + Vector3(-r, 2 * r * k, 0)); }   //upleft
+		else if   (-k <= cosvalue && cosvalue <= 0 && d[1] > 0)     {sph.setCenter(center + Vector3(r, -2 * r * k, 0));}    //downright
+		else if   (-k <= cosvalue && cosvalue <= 0 && d[1] < 0)     {sph.setCenter(center + Vector3(r, 2 * r * k, 0));}     //upright
+		else if   ( -1 <= cosvalue && cosvalue <= -k)				{sph.setCenter(center + Vector3(2 * r, 0, 0));};	    //right
 		sph.moved = true;
 	};
 }
