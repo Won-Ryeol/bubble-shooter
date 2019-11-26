@@ -13,9 +13,13 @@ public:
 	void draw() const;
 	void aftercollision();
 	bool getmoved() const;
+	void setremovesearch();
+	void resetremovesearch();
+	bool getremovesearch() const;
 
 private:
 	Vector3 properties;
 	bool moved;
+	bool removesearch;
 };
 

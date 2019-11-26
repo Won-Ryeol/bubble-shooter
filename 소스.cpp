@@ -1,10 +1,12 @@
 #include <iostream>
 #include <vector>
 #include <time.h>
+#include <algorithm>
 #include "SolidSphere.h"
 #include "Arrow.h"
 #include "Light.h"
 #include "GameOver.h"
+#include "Removecontrol.h"
 
 using namespace std;
 
@@ -27,7 +29,7 @@ Vector3 textframe(30, 300, 0);
 //power setting
 float shootpower = 25;
 float anglemovementrate = 5;
-float timebarrate = 1;
+float timebarrate = 0.7;
 float radious = 30;
 
 //objects
@@ -36,9 +38,13 @@ vector<SolidSphere> nextspheres;
 Light* light;
 Material mtl1, mtl2, mtl3, mtl4, defaultmtl, gameovermtl;
 Arrow arrow;
+int score= 0;
 
 //gameover
 GameOver g;
+
+//remove
+Removecontrol r;
 
 void init() {
 	//light init
@@ -108,6 +114,7 @@ void init() {
 void idle() {
 	endt = clock();
 	if (endt - start > 1000 / 60) {
+
 		//gameover detection
 		g(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT);
 
@@ -165,6 +172,32 @@ void idle() {
 
 			timebarindex = 0;
 		};
+
+		//remove algorithm
+		static bool searched = false;
+		static int spheressize = spheres.size();
+		if (spheressize != spheres.size()) {
+			searched = false;
+			spheressize = spheres.size();
+			for (int i = 0; i < spheres.size(); i++) {
+				spheres[i].resetremovesearch();
+			};
+		};
+		if (spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)].getmoved() && searched == false) {
+			vector<int> evec;
+			r(spheres, spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], evec);
+			for (int i = 0; i < evec.size(); i++) { r(spheres, spheres[evec[i]], evec); };
+			sort(evec.begin(), evec.end());
+			if (evec.size() >= 2) {
+				score += (1 + evec.size()) * 10;
+				spheres.erase(spheres.begin() + spheres.size() - (size(spheres) > 1 ? 2 : 1));
+				for (int i = evec.size() - 1; i >= 0; i--) {
+					spheres.erase(spheres.begin() + evec[i]);
+				};
+			};
+			searched = true;
+		};
+
 		start = endt;
 	}
 	glutPostRedisplay();
@@ -175,7 +208,7 @@ void Specialkeyboard(int key, int x, int y) {
 
 	else if (key == GLUT_KEY_RIGHT && g.getover() != true) { if (arrow.getAngleOfArrow() < 70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() + anglemovementrate); } }
 	
-	//KEY_DOWN have to be deleted
+	//KEY_DOWN should be deleted
 	else if (key == GLUT_KEY_DOWN && g.getover() != true) {
 		if (size(spheres) > 1)
 		{
@@ -224,13 +257,20 @@ void keyboard(unsigned char key, int x, int y) {
 			spheres.pop_back();
 		nextspheres.pop_back();
 		timebarindex = 0;
+		score = 0;
 		init();
 	};
 
 	if (key == 27) {
 		exit(0);
 	}
-
+	//q,w should be deleted
+	if (key == 'q') {
+		timebarrate = 0;
+	}
+	if (key == 'w') {
+		timebarrate = 0.7;
+	}
 	glutPostRedisplay();
 }
 
@@ -300,10 +340,11 @@ void renderScene() {
 	glDisable(GL_LIGHT0);
 		
 	//characters
+
 	if (g.getover())
 	{
 		static int i;
-		draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 300, 1 ,0 ,0);
+		draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 200, 1 ,0 ,0);
 		if (spheres[0].getMTL() == gameovermtl && i<180)
 			draw_characters(GLUT_BITMAP_HELVETICA_18, "Press Enter to Restart", textframe[0] - 120, textframe[1] - 350 ,0,1,1);
 		if (i >= 360)
@@ -311,6 +352,8 @@ void renderScene() {
 		i++;
 	}
 	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "SCORE : ", textframe[0] -250, textframe[1]+20, 1, 1, 1);
+	char char_score[4] = { 0, };	_itoa_s(score, char_score, 10);
+	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, char_score, textframe[0] - 150, textframe[1] + 20, 1, 1, 1);
 	draw_characters(GLUT_BITMAP_HELVETICA_18, "TIME", textframe[0] + 0, textframe[1]+50, 1, 1, 1);
 	draw_characters(GLUT_BITMAP_HELVETICA_18, "NEXT", -280, -320, 1, 1, 1);
 

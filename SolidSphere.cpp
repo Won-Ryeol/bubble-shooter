@@ -4,11 +4,13 @@
 SolidSphere::SolidSphere(float r, int sl, int st) : SolidShape3D() {
 	properties.setXYZ(r, sl, st);
 	moved = false;
+	removesearch = false;
 }
 
 SolidSphere::SolidSphere(const SolidSphere& sph) : SolidShape3D(sph) {
 	properties = sph.properties;
 	moved = sph.moved;
+	removesearch = sph.removesearch;
 }
 
 Vector3 SolidSphere::getProperties() const{
@@ -45,6 +47,12 @@ void SolidSphere::collisionHandling(SolidSphere& sph) {
 void SolidSphere::aftercollision() { moved = true; }
 
 bool SolidSphere::getmoved() const { return moved; }
+
+void SolidSphere::setremovesearch() { removesearch = true; }
+
+void SolidSphere::resetremovesearch() { removesearch = false; }
+
+bool SolidSphere::getremovesearch() const { return removesearch; };
 
 void SolidSphere::draw() const {
 	glPushMatrix();
