@@ -54,7 +54,6 @@ void SolidShape3D::setMTL() {
 }
 
 void SolidShape3D::setRandomMTL4(Material mtl1, Material mtl2, Material mtl3, Material mtl4) {
-	srand((unsigned int)time(0));
 
 	switch (rand() % 4 + 1)
 	{

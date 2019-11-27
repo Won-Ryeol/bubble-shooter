@@ -91,6 +91,8 @@ void init() {
 	mtl4.setShininess(76.8);
 
 	//sphere init
+	srand((unsigned int)time(0));
+
 	SolidSphere sphere1(radious, 100, 10);
 	sphere1.setCenter(startcenter);
 	sphere1.setVelocity(0, 0, 0);
@@ -344,7 +346,7 @@ void renderScene() {
 	if (g.getover())
 	{
 		static int i;
-		draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 200, 1 ,0 ,0);
+		draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 300, 1 ,0 ,0);
 		if (spheres[0].getMTL() == gameovermtl && i<180)
 			draw_characters(GLUT_BITMAP_HELVETICA_18, "Press Enter to Restart", textframe[0] - 120, textframe[1] - 350 ,0,1,1);
 		if (i >= 360)
