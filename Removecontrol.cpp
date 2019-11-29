@@ -14,12 +14,9 @@ void Removecontrol::operator()(vector<SolidSphere>& sphes ,SolidSphere& sph, vec
 	sph.setremovesearch();
 	for (int i = 0; i < sphes.size()-1; i++)
 	{
-		if (sphes[i].getremovesearch() == false)
-		{
-			if (search(sphes[i], sph) == 1) {
-				removenum.push_back(i);
-				sphes[i].setremovesearch();
-			};
-		}
+		if (search(sphes[i], sph) == 1) {
+			removenum.push_back(i);
+			sphes[i].setremovesearch();
+		};
 	}
 };

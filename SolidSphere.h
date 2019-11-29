@@ -16,10 +16,14 @@ public:
 	void setremovesearch();
 	void resetremovesearch();
 	bool getremovesearch() const;
+	void setmarked();
+	void resetmarked();
+	bool getmarked() const;
 
 private:
 	Vector3 properties;
 	bool moved;
 	bool removesearch;
+	bool marked;
 };
 

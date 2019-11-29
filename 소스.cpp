@@ -7,7 +7,7 @@
 #include "Light.h"
 #include "GameOver.h"
 #include "Removecontrol.h"
-
+#include "dropcontrol.h"
 using namespace std;
 
 //time index
@@ -16,7 +16,7 @@ clock_t endt;
 float timebarindex = 0;
 
 //window setting
-#define WIDTH 600
+#define WIDTH 660
 #define HEIGHT 800
 #define boundaryX WIDTH/2
 #define boundaryY HEIGHT/2
@@ -35,82 +35,41 @@ float radious = 30;
 //objects
 vector<SolidSphere> spheres;
 vector<SolidSphere> nextspheres;
+vector<SolidSphere> droppingspheres;
 Light* light;
-Material mtl1, mtl2, mtl3, mtl4, defaultmtl, gameovermtl;
+Material defaultmtl, gameovermtl;
 Arrow arrow;
 int score= 0;
 
-//gameover
+//detector
 GameOver g;
-
-//remove
 Removecontrol r;
+Dropcontrol d(250-radious);
 
 void init() {
 	//light init
 	light = new Light(boundaryX, boundaryY, boundaryX / 2, GL_LIGHT0);
-	light->setAmbient(0.5, 0.5, 0.5, 1.0);
-	light->setDiffuse(0.7, 0.7, 0.7, 1.0);
-	light->setSpecular(1.0, 1.0, 1.0, 1.0);
+	light->setAmbient(0.5, 0.5, 0.5, 1.0);		light->setDiffuse(0.7, 0.7, 0.7, 1.0);		light->setSpecular(1.0, 1.0, 1.0, 1.0);
 
 	//mtl init
-	defaultmtl.setEmission(0.1, 0.1, 0.1, 1);
-	defaultmtl.setAmbient(0.3, 0.3, 0.3, 1);
-	defaultmtl.setDiffuse(0.5, 0.5, 0.5, 1);
-	defaultmtl.setSpecular(1.0, 1.0, 1.0, 1);
-	defaultmtl.setShininess(10);
+	defaultmtl.setEmission(0.1, 0.1, 0.1, 1);	defaultmtl.setAmbient(0.3, 0.3, 0.3, 1);
+	defaultmtl.setDiffuse(0.5, 0.5, 0.5, 1);	defaultmtl.setSpecular(1.0, 1.0, 1.0, 1);	defaultmtl.setShininess(10);
 		//gameovermtl
-	gameovermtl.setEmission(0.1, 0.1, 0.1, 1);
-	gameovermtl.setAmbient(0.1, 0.1, 0.1, 1);
-	gameovermtl.setDiffuse(0.1, 0.1, 0.1, 1);
-	gameovermtl.setSpecular(1.0, 1.0, 1.0, 1);
-	gameovermtl.setShininess(10);
-		//emerald
-	mtl1.setEmission(0.1, 0.1, 0.1, 1);
-	mtl1.setAmbient(0.0215, 0.1745, 0.0215, 1.0);
-	mtl1.setDiffuse(0.07568, 0.61424, 0.07568, 1);
-	mtl1.setSpecular(0.633, 0.727811, 0.633, 1);
-	mtl1.setShininess(76.8);
-		//gold
-	mtl2.setEmission(0.1, 0.1, 0.1, 1);
-	mtl2.setAmbient(0.24725, 0.1995, 0.0745, 1.0);
-	mtl2.setDiffuse(0.75164, 0.60648, 0.22648, 1);
-	mtl2.setSpecular(0.628281, 0.555802, 0.366065, 1);
-	mtl2.setShininess(51.2);
-		//pearl
-	mtl3.setEmission(0.1, 0.1, 0.1, 1);
-	mtl3.setAmbient(0.25, 0.20725, 0.20725, 1.0);
-	mtl3.setDiffuse(1, 0.829,0.829, 1);
-	mtl3.setSpecular(0.296648, 0.296648, 0.296648, 1);
-	mtl3.setShininess(11.264);
-		//ruby
-	mtl4.setEmission(0.1, 0.1, 0.1, 1);
-	mtl4.setAmbient(0.1745, 0.01175, 0.01175, 1.0);
-	mtl4.setDiffuse(0.61424, 0.04136, 0.04136, 1);
-	mtl4.setSpecular(0.727811, 0.626959, 0.626959, 1);
-	mtl4.setShininess(76.8);
-
+	gameovermtl.setEmission(0.1, 0.1, 0.1, 1);	gameovermtl.setAmbient(0.1, 0.1, 0.1, 1);
+	gameovermtl.setDiffuse(0.1, 0.1, 0.1, 1);	gameovermtl.setSpecular(1.0, 1.0, 1.0, 1);	gameovermtl.setShininess(10);
+	
 	//sphere init
 	srand((unsigned int)time(0));
 
 	SolidSphere sphere1(radious, 100, 10);
-	sphere1.setCenter(startcenter);
-	sphere1.setVelocity(0, 0, 0);
-	sphere1.setRandomMTL4(mtl1, mtl2, mtl3, mtl4);
-	spheres.push_back(sphere1);
+	sphere1.setCenter(startcenter);				sphere1.setVelocity(0, 0, 0);		sphere1.setRandomMTL4();		spheres.push_back(sphere1);
 
 	//nextsphere init
 	SolidSphere nextsphere(radious, 100, 10);
-	nextsphere.setCenter(nextspherecenter);
-	nextsphere.setVelocity(0, 0, 0);
-	nextsphere.setRandomMTL4(mtl1, mtl2, mtl3, mtl4);
-	nextspheres.push_back(nextsphere);
+	nextsphere.setCenter(nextspherecenter);		nextsphere.setVelocity(0, 0, 0);	nextsphere.setRandomMTL4();		nextspheres.push_back(nextsphere);
 	
 	//Arrow
-	arrow.setArrow(25,50,10,10,100);
-	arrow.setCenter(startcenter);
-	arrow.setAngleOfArrow(0);
-	arrow.setMTL(defaultmtl);
+	arrow.setArrow(25,50,10,10,100);			arrow.setCenter(startcenter);		arrow.setAngleOfArrow(0);		arrow.setMTL(defaultmtl);
 }
 
 void idle() {
@@ -141,7 +100,7 @@ void idle() {
 		for (int i = 0; i < spheres.size(); i++)
 		{
 			spheres[i].move();
-
+			
 			if (abs(spheres[i].getCenter()[0]) >= boundaryX - spheres[i].getProperties()[0]) {
 				spheres[i].setVelocity(Vector3(-spheres[i].getVelocity()[0], spheres[i].getVelocity()[1], spheres[i].getVelocity()[2]));
 			}
@@ -152,7 +111,6 @@ void idle() {
 				spheres[i].aftercollision();
 			};
 		};
-
 		if (spheres.size() > 2) {
 			for (int i = 0; i < spheres.size() - 2; i++)
 				spheres[i].collisionHandling(spheres[spheres.size() - 2]);
@@ -169,27 +127,41 @@ void idle() {
 			s.setVelocity(0, 0, 0);
 			s.setMTL(nextspheres[0].getMTL());
 			spheres.push_back(s);
-			
-			nextspheres[0].setRandomMTL4(mtl1, mtl2, mtl3, mtl4);
+
+			nextspheres[0].setRandomMTL4();
 
 			timebarindex = 0;
 		};
 
-		//remove algorithm
+
+		//droppingspheres
+		for (int i = 0; i < droppingspheres.size(); i++)
+		{
+			droppingspheres[i].move();
+			if (droppingspheres[i].getCenter()[1] < -boundaryY - 50) {
+				droppingspheres.erase(droppingspheres.begin() + i);
+			}
+		}
+		//remove&drop algorithm
 		static bool searched = false;
 		static int spheressize = spheres.size();
-		if (spheressize != spheres.size()) {
+		if (spheressize < spheres.size()) {
 			searched = false;
-			spheressize = spheres.size();
 			for (int i = 0; i < spheres.size(); i++) {
 				spheres[i].resetremovesearch();
+				spheres[i].resetmarked();
 			};
 		};
+		spheressize = spheres.size();
 		if (spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)].getmoved() && searched == false) {
+			
+			//remove
 			vector<int> evec;
 			r(spheres, spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], evec);
+
 			for (int i = 0; i < evec.size(); i++) { r(spheres, spheres[evec[i]], evec); };
 			sort(evec.begin(), evec.end());
+
 			if (evec.size() >= 2) {
 				score += (1 + evec.size()) * 10;
 				spheres.erase(spheres.begin() + spheres.size() - (size(spheres) > 1 ? 2 : 1));
@@ -197,6 +169,23 @@ void idle() {
 					spheres.erase(spheres.begin() + evec[i]);
 				};
 			};
+			//drop
+			vector<int> dvec;
+			for (int i = 0; i < spheres.size() - 1; i++)
+				if (spheres[i].getCenter()[1] == 250 - radious)
+				{spheres[i].setmarked();	dvec.push_back(i);}
+
+			for (int i = 0; i < dvec.size(); i++)
+				d(spheres, spheres[dvec[i]], dvec);
+
+			for (int i = spheres.size() - 2; i >= 0; i--)
+				if (spheres[i].getmarked() == false)
+				{
+					droppingspheres.push_back(spheres[i]);
+					spheres.erase(spheres.begin() + i);
+					droppingspheres.back().setVelocity(0, -30, 0);
+					score += (spheres.size() - dvec.size()) * 10;
+				}
 			searched = true;
 		};
 
@@ -248,7 +237,7 @@ void keyboard(unsigned char key, int x, int y) {
 
 			spheres.push_back(s);
 			
-			nextspheres[0].setRandomMTL4(mtl1, mtl2, mtl3, mtl4);
+			nextspheres[0].setRandomMTL4();
 
 			timebarindex = 0;
 		};
@@ -297,29 +286,22 @@ void renderScene() {
 	//boundary
 	glBegin(GL_QUADS);
 	glColor3f(0.7,0.7,0.7);
-	glVertex3f(-WIDTH / 2, -HEIGHT / 2 + 120, -20);
-	glVertex3f(-WIDTH / 2, -HEIGHT / 2 + 110, -20);
-	glVertex3f(WIDTH / 2, -HEIGHT / 2 + 110, -20);
-	glVertex3f(WIDTH / 2, -HEIGHT / 2 + 120, -20);
+	glVertex3f(-boundaryX, -boundaryY + 120, -20);			glVertex3f(-boundaryX, -boundaryY + 110, -20);
+	glVertex3f(boundaryX , -boundaryY + 110, -20);			glVertex3f(boundaryX , -boundaryY + 120, -20);
 	glEnd();
 
 	glBegin(GL_QUADS);
-	glVertex3f(-WIDTH / 2, HEIGHT / 2 - 150, -20);
-	glVertex3f(-WIDTH / 2, HEIGHT / 2 - 140, -20);
-	glVertex3f(WIDTH / 2, HEIGHT / 2 - 140, -20);
-	glVertex3f(WIDTH / 2, HEIGHT / 2 - 150, -20);
+	glVertex3f(-boundaryX, boundaryY - 150, -20);			glVertex3f(-boundaryX, boundaryY - 140, -20);
+	glVertex3f(boundaryX , boundaryY - 140, -20);			glVertex3f(boundaryX , boundaryY - 150, -20);
 	glEnd();
 
 	//time bar
 	glBegin(GL_QUADS);
 	glColor3f(1, 0, 0);
-	glVertex3f(textframe[0] + 10, textframe[1] + 30, -20);
-	glVertex3f(textframe[0] + 10, textframe[1] + 20, -20);
-	glVertex3f(textframe[0] + 160 - timebarindex, textframe[1] + 20, -20);
-	glVertex3f(textframe[0] + 160 - timebarindex, textframe[1] + 30, -20);
+	glVertex3f(textframe[0] + 10, textframe[1] + 30, -20);						glVertex3f(textframe[0] + 10, textframe[1] + 20, -20);
+	glVertex3f(textframe[0] + 160 - timebarindex, textframe[1] + 20, -20);		glVertex3f(textframe[0] + 160 - timebarindex, textframe[1] + 30, -20);
 	glEnd();
-
-
+	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -336,13 +318,15 @@ void renderScene() {
 	//spheres
 	for (auto sph : spheres)
 		sph.draw();
+	//droppingspheres
+	for (auto sph : droppingspheres)
+		sph.draw();
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_LIGHT0);
 		
 	//characters
-
 	if (g.getover())
 	{
 		static int i;

@@ -21,7 +21,7 @@ public:
 	void move();
 	void setMTL();
 	void setMTL(Material mtl);
-	void setRandomMTL4(Material mtl1, Material mtl2, Material mtl3, Material mtl4);
+	void setRandomMTL4();
 	Material getMTL() const;
 	virtual void draw() const = 0;
 
