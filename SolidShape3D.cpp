@@ -53,7 +53,7 @@ void SolidShape3D::setMTL() {
 	mtl.setShininess(10);
 }
 
-void SolidShape3D::setRandomMTL4() {
+void SolidShape3D::setRandomMTL() {
 	switch (rand() % 4 + 1)
 	{
 		case 1: 

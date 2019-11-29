@@ -1,6 +1,6 @@
 #include "dropcontrol.h"
 
-Dropcontrol::Dropcontrol(int h) { height = h; };
+Dropcontrol::Dropcontrol() {};
 
 bool Dropcontrol::search(SolidSphere s, SolidSphere sph) {
 	return (

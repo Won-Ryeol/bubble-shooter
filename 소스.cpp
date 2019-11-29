@@ -6,8 +6,10 @@
 #include "Arrow.h"
 #include "Light.h"
 #include "GameOver.h"
+#include "GameClear.h"
 #include "Removecontrol.h"
 #include "dropcontrol.h"
+
 using namespace std;
 
 //time index
@@ -40,11 +42,12 @@ Light* light;
 Material defaultmtl, gameovermtl;
 Arrow arrow;
 int score= 0;
+int highscore = 0;
 
 //detector
-GameOver g;
+GameOver go; GameClear gc;
 Removecontrol r;
-Dropcontrol d(250-radious);
+Dropcontrol d;
 
 void init() {
 	//light init
@@ -58,15 +61,37 @@ void init() {
 	gameovermtl.setEmission(0.1, 0.1, 0.1, 1);	gameovermtl.setAmbient(0.1, 0.1, 0.1, 1);
 	gameovermtl.setDiffuse(0.1, 0.1, 0.1, 1);	gameovermtl.setSpecular(1.0, 1.0, 1.0, 1);	gameovermtl.setShininess(10);
 	
-	//sphere init
+	//default map
 	srand((unsigned int)time(0));
 
+	for (unsigned int i = 0; i < WIDTH / (2 * radious); i++)
+		for (unsigned int j = 0; j < 6; j++)
+			if ((i != WIDTH / (2 * radious) - 1 or (j % 2) != 1) && (rand() % 100 + 1) <= 80) {
+				spheres.push_back(SolidSphere(radious, 100, 10));
+				spheres.back().setCenter(Vector3(-boundaryX + radious + 2 * radious * i + (j % 2) * radious, 250 - radious - sqrt(3) * radious * j, 0));
+				spheres.back().setVelocity(0, 0, 0);
+				spheres.back().setRandomMTL();
+				spheres.back().aftercollision();
+			};
+
+	//sphere init
 	SolidSphere sphere1(radious, 100, 10);
-	sphere1.setCenter(startcenter);				sphere1.setVelocity(0, 0, 0);		sphere1.setRandomMTL4();		spheres.push_back(sphere1);
+	sphere1.setCenter(startcenter);				sphere1.setVelocity(0, 0, 0);		sphere1.setRandomMTL();		spheres.push_back(sphere1);
+
+	//map spheres erase
+	vector<int> mapvec;
+	for (unsigned int i = 0; i < spheres.size() - 1; i++)
+		if (spheres[i].getCenter()[1] == 250 - radious)
+		{spheres[i].setmarked();	mapvec.push_back(i);}
+	for (unsigned int i = 0; i < mapvec.size(); i++)
+		d(spheres, spheres[mapvec[i]], mapvec);
+	for (int i = spheres.size() - 2; i >= 0; i--)
+		if (spheres[i].getmarked() == false)
+			spheres.erase(spheres.begin() + i);
 
 	//nextsphere init
 	SolidSphere nextsphere(radious, 100, 10);
-	nextsphere.setCenter(nextspherecenter);		nextsphere.setVelocity(0, 0, 0);	nextsphere.setRandomMTL4();		nextspheres.push_back(nextsphere);
+	nextsphere.setCenter(nextspherecenter);		nextsphere.setVelocity(0, 0, 0);	nextsphere.setRandomMTL();		nextspheres.push_back(nextsphere);
 	
 	//Arrow
 	arrow.setArrow(25,50,10,10,100);			arrow.setCenter(startcenter);		arrow.setAngleOfArrow(0);		arrow.setMTL(defaultmtl);
@@ -75,29 +100,34 @@ void init() {
 void idle() {
 	endt = clock();
 	if (endt - start > 1000 / 60) {
+		//gameclear
+		gc(spheres);
+		if (gc.getclear())
+			if (score >= highscore) { highscore = score; };
 
 		//gameover detection
-		g(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT);
+		go(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT);
 
 		//gameover mtl effect
 		static int j = 0;
 		static bool now = 0;
 		static bool before = 0;
-		now = g.getover();
+		now = go.getover();
 		if (now > before) { j++; };
-		before = g.getover(); //gameover될 때마다 j가 1씩 커진다.
+		before = go.getover(); //gameover될 때마다 j가 1씩 커진다.
 
-		if (g.getover())
+		if (go.getover())
 		{	static int i = spheres.size() - 1;
 			static int jin = j;
 			if (jin != j) { i = spheres.size() - 1; jin = j; };
 			spheres[i].setMTL(gameovermtl);
 			if (i > 0)
 				i--;
+			if (score >= highscore) { highscore = score; };
 		}
 		
 		//collision handling
-		for (int i = 0; i < spheres.size(); i++)
+		for (unsigned int i = 0; i < spheres.size(); i++)
 		{
 			spheres[i].move();
 			
@@ -112,12 +142,12 @@ void idle() {
 			};
 		};
 		if (spheres.size() > 2) {
-			for (int i = 0; i < spheres.size() - 2; i++)
+			for (unsigned int i = 0; i < spheres.size() - 2; i++)
 				spheres[i].collisionHandling(spheres[spheres.size() - 2]);
 		}
 
 		//auto shooting
-		if(g.getover() != true)
+		if(go.getover() != true && gc.getclear() != true)
 			timebarindex = timebarindex + (timebarindex >= 150 ? 0 : timebarrate);
 		if (timebarindex >= 150) {
 			spheres.back().setVelocity(shootpower * sin(arrow.getAngleOfArrow() / 57.29577951), shootpower * cos(arrow.getAngleOfArrow() / 57.29577951), 0);
@@ -128,26 +158,27 @@ void idle() {
 			s.setMTL(nextspheres[0].getMTL());
 			spheres.push_back(s);
 
-			nextspheres[0].setRandomMTL4();
+			nextspheres[0].setRandomMTL();
 
 			timebarindex = 0;
 		};
 
 
 		//droppingspheres
-		for (int i = 0; i < droppingspheres.size(); i++)
+		for (unsigned int i = 0; i < droppingspheres.size(); i++)
 		{
 			droppingspheres[i].move();
+			droppingspheres[i].setVelocity(droppingspheres[i].getVelocity()+Vector3(0,-2,0));
 			if (droppingspheres[i].getCenter()[1] < -boundaryY - 50) {
 				droppingspheres.erase(droppingspheres.begin() + i);
 			}
 		}
 		//remove&drop algorithm
 		static bool searched = false;
-		static int spheressize = spheres.size();
+		static unsigned int spheressize = spheres.size();
 		if (spheressize < spheres.size()) {
 			searched = false;
-			for (int i = 0; i < spheres.size(); i++) {
+			for (unsigned int i = 0; i < spheres.size(); i++) {
 				spheres[i].resetremovesearch();
 				spheres[i].resetmarked();
 			};
@@ -159,7 +190,7 @@ void idle() {
 			vector<int> evec;
 			r(spheres, spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], evec);
 
-			for (int i = 0; i < evec.size(); i++) { r(spheres, spheres[evec[i]], evec); };
+			for (unsigned int i = 0; i < evec.size(); i++) { r(spheres, spheres[evec[i]], evec); };
 			sort(evec.begin(), evec.end());
 
 			if (evec.size() >= 2) {
@@ -171,11 +202,11 @@ void idle() {
 			};
 			//drop
 			vector<int> dvec;
-			for (int i = 0; i < spheres.size() - 1; i++)
+			for (unsigned int i = 0; i < spheres.size() - 1; i++)
 				if (spheres[i].getCenter()[1] == 250 - radious)
 				{spheres[i].setmarked();	dvec.push_back(i);}
 
-			for (int i = 0; i < dvec.size(); i++)
+			for (unsigned int i = 0; i < dvec.size(); i++)
 				d(spheres, spheres[dvec[i]], dvec);
 
 			for (int i = spheres.size() - 2; i >= 0; i--)
@@ -183,8 +214,7 @@ void idle() {
 				{
 					droppingspheres.push_back(spheres[i]);
 					spheres.erase(spheres.begin() + i);
-					droppingspheres.back().setVelocity(0, -30, 0);
-					score += (spheres.size() - dvec.size()) * 10;
+					score += 10;
 				}
 			searched = true;
 		};
@@ -195,12 +225,12 @@ void idle() {
 }
 
 void Specialkeyboard(int key, int x, int y) {
-	if (key == GLUT_KEY_LEFT && g.getover()!=true) { if (arrow.getAngleOfArrow() > -70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() - anglemovementrate); } }
+	if (key == GLUT_KEY_LEFT && go.getover()!=true && gc.getclear() != true) { if (arrow.getAngleOfArrow() > -70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() - anglemovementrate); } }
 
-	else if (key == GLUT_KEY_RIGHT && g.getover() != true) { if (arrow.getAngleOfArrow() < 70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() + anglemovementrate); } }
+	else if (key == GLUT_KEY_RIGHT && go.getover() != true && gc.getclear() != true) { if (arrow.getAngleOfArrow() < 70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() + anglemovementrate); } }
 	
 	//KEY_DOWN should be deleted
-	else if (key == GLUT_KEY_DOWN && g.getover() != true) {
+	else if (key == GLUT_KEY_DOWN && go.getover() != true && gc.getclear() != true) {
 		if (size(spheres) > 1)
 		{
 			Material n = spheres.back().getMTL();
@@ -225,7 +255,7 @@ void Specialkeyboard(int key, int x, int y) {
 }
 
 void keyboard(unsigned char key, int x, int y) {
-	if (spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)].getVelocity()[1] == 0 && g.getover() != true) {
+	if (spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)].getVelocity()[1] == 0 && go.getover() != true && gc.getclear() !=true) {
 		if (key == 32) {
 			spheres.back().setVelocity(shootpower * sin(arrow.getAngleOfArrow() / 57.29577951), shootpower * cos(arrow.getAngleOfArrow() / 57.29577951), 0);
 
@@ -237,13 +267,13 @@ void keyboard(unsigned char key, int x, int y) {
 
 			spheres.push_back(s);
 			
-			nextspheres[0].setRandomMTL4();
+			nextspheres[0].setRandomMTL();
 
 			timebarindex = 0;
 		};
 	};
-	if (key == 13 && g.getover()) {
-		g.reset();
+	if (key == 13 && go.getover()) {
+		go.reset();
 		while(spheres.size()>0)
 			spheres.pop_back();
 		nextspheres.pop_back();
@@ -251,7 +281,14 @@ void keyboard(unsigned char key, int x, int y) {
 		score = 0;
 		init();
 	};
-
+	if (key == 13 && gc.getclear()) {
+		gc.reset();
+		spheres.pop_back();
+		nextspheres.pop_back();
+		timebarindex = 0;
+		score = 0;
+		init();
+	};
 	if (key == 27) {
 		exit(0);
 	}
@@ -268,7 +305,7 @@ void keyboard(unsigned char key, int x, int y) {
 void draw_characters(void* font, const char* c, float x, float y, float r, float g, float b) {
 	glColor3f(r, g, b);
 	glRasterPos2f(x, y);
-	for (int i = 0; i < strlen(c); i++)
+	for (unsigned int i = 0; i < strlen(c); i++)
 		glutBitmapCharacter(font, c[i]);
 }
 
@@ -309,11 +346,11 @@ void renderScene() {
 	//light setting
 	light->draw();
 
-	//arrow
-	arrow.draw();
-
 	//nextsphere
 	nextspheres.back().draw();
+
+	//arrow
+	arrow.draw();
 
 	//spheres
 	for (auto sph : spheres)
@@ -327,18 +364,27 @@ void renderScene() {
 	glDisable(GL_LIGHT0);
 		
 	//characters
-	if (g.getover())
+	if (go.getover() or gc.getclear())
 	{
+		if (go.getover())
+			draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 300, 1 ,0 ,0);
+		if (gc.getclear())
+			draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Clear", textframe[0] - 85, textframe[1] - 300, 0, 1, 0);
+
+		draw_characters(GLUT_BITMAP_HELVETICA_18, "HIGHSCORE : ", textframe[0] - 110, textframe[1] - 350, 1, 1, 0);
+		char char_highscore[8] = { 0, };	_itoa_s(highscore, char_highscore, 10);
+		draw_characters(GLUT_BITMAP_HELVETICA_18, char_highscore, textframe[0] + 20, textframe[1]- 350, 1, 1, 0);
+		
 		static int i;
-		draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 300, 1 ,0 ,0);
-		if (spheres[0].getMTL() == gameovermtl && i<180)
-			draw_characters(GLUT_BITMAP_HELVETICA_18, "Press Enter to Restart", textframe[0] - 120, textframe[1] - 350 ,0,1,1);
+		if ((gc.getclear() or spheres[0].getMTL() == gameovermtl) && i<180)
+			draw_characters(GLUT_BITMAP_HELVETICA_18, "Press Enter to Restart", textframe[0] - 120, textframe[1] - 400 ,0,1,1);
 		if (i >= 360)
 			i = 0;
 		i++;
 	}
+
 	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "SCORE : ", textframe[0] -250, textframe[1]+20, 1, 1, 1);
-	char char_score[4] = { 0, };	_itoa_s(score, char_score, 10);
+	char char_score[8] = { 0, };	_itoa_s(score, char_score, 10);
 	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, char_score, textframe[0] - 150, textframe[1] + 20, 1, 1, 1);
 	draw_characters(GLUT_BITMAP_HELVETICA_18, "TIME", textframe[0] + 0, textframe[1]+50, 1, 1, 1);
 	draw_characters(GLUT_BITMAP_HELVETICA_18, "NEXT", -280, -320, 1, 1, 1);
