@@ -16,6 +16,8 @@ using namespace std;
 clock_t start = clock();
 clock_t endt;
 float timebarindex = 0;
+int playstarttime;
+int playtime;
 
 //window setting
 #define WIDTH 660
@@ -67,7 +69,7 @@ void init() {
 	for (unsigned int i = 0; i < WIDTH / (2 * radious); i++)
 		for (unsigned int j = 0; j < 6; j++)
 			if ((i != WIDTH / (2 * radious) - 1 or (j % 2) != 1) && (rand() % 100 + 1) <= 80) {
-				spheres.push_back(SolidSphere(radious, 100, 10));
+				spheres.push_back(SolidSphere(radious, 50, 10));
 				spheres.back().setCenter(Vector3(-boundaryX + radious + 2 * radious * i + (j % 2) * radious, 250 - radious - sqrt(3) * radious * j, 0));
 				spheres.back().setVelocity(0, 0, 0);
 				spheres.back().setRandomMTL();
@@ -75,7 +77,7 @@ void init() {
 			};
 
 	//sphere init
-	SolidSphere sphere1(radious, 100, 10);
+	SolidSphere sphere1(radious, 50, 10);
 	sphere1.setCenter(startcenter);				sphere1.setVelocity(0, 0, 0);		sphere1.setRandomMTL();		spheres.push_back(sphere1);
 
 	//map spheres erase
@@ -95,6 +97,9 @@ void init() {
 	
 	//Arrow
 	arrow.setArrow(25,50,10,10,100);			arrow.setCenter(startcenter);		arrow.setAngleOfArrow(0);		arrow.setMTL(defaultmtl);
+	
+	//play time 
+	playstarttime = (unsigned int)time(0);
 }
 
 void idle() {
@@ -102,8 +107,15 @@ void idle() {
 	if (endt - start > 1000 / 60) {
 		//gameclear
 		gc(spheres);
-		if (gc.getclear())
+		static bool now1 = 0;
+		static bool before1 = 0;
+		now1= gc.getclear();
+		if (gc.getclear() && now1 > before1)
+		{
 			if (score >= highscore) { highscore = score; };
+			playtime = (unsigned int)time(0) - playstarttime;
+		}
+		before1 = gc.getclear();
 
 		//gameover detection
 		go(spheres[spheres.size() - (size(spheres) > 1 ? 2 : 1)], HEIGHT);
@@ -152,7 +164,7 @@ void idle() {
 		if (timebarindex >= 150) {
 			spheres.back().setVelocity(shootpower * sin(arrow.getAngleOfArrow() / 57.29577951), shootpower * cos(arrow.getAngleOfArrow() / 57.29577951), 0);
 
-			SolidSphere s(radious, 100, 10);
+			SolidSphere s(radious, 50, 10);
 			s.setCenter(startcenter);
 			s.setVelocity(0, 0, 0);
 			s.setMTL(nextspheres[0].getMTL());
@@ -229,28 +241,6 @@ void Specialkeyboard(int key, int x, int y) {
 
 	else if (key == GLUT_KEY_RIGHT && go.getover() != true && gc.getclear() != true) { if (arrow.getAngleOfArrow() < 70) { arrow.setAngleOfArrow(arrow.getAngleOfArrow() + anglemovementrate); } }
 	
-	//KEY_DOWN should be deleted
-	else if (key == GLUT_KEY_DOWN && go.getover() != true && gc.getclear() != true) {
-		if (size(spheres) > 1)
-		{
-			Material n = spheres.back().getMTL();
-			spheres.pop_back();
-			Material m = spheres.back().getMTL();
-			spheres.pop_back();
-
-			nextspheres[0].setMTL(n);
-
-			SolidSphere s(radious, 100, 10);
-
-			s.setCenter(startcenter);
-			s.setVelocity(0, 0, 0);
-			s.setMTL(m);
-
-			spheres.push_back(s);
-			
-			timebarindex = 0;
-		}
-	}
 	glutPostRedisplay();
 }
 
@@ -259,7 +249,7 @@ void keyboard(unsigned char key, int x, int y) {
 		if (key == 32) {
 			spheres.back().setVelocity(shootpower * sin(arrow.getAngleOfArrow() / 57.29577951), shootpower * cos(arrow.getAngleOfArrow() / 57.29577951), 0);
 
-			SolidSphere s(radious, 100, 10);
+			SolidSphere s(radious, 50, 10);
 
 			s.setCenter(startcenter);
 			s.setVelocity(0, 0, 0);
@@ -291,13 +281,6 @@ void keyboard(unsigned char key, int x, int y) {
 	};
 	if (key == 27) {
 		exit(0);
-	}
-	//q,w should be deleted
-	if (key == 'q') {
-		timebarrate = 0;
-	}
-	if (key == 'w') {
-		timebarrate = 0.7;
 	}
 	glutPostRedisplay();
 }
@@ -369,20 +352,24 @@ void renderScene() {
 		if (go.getover())
 			draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Over", textframe[0] - 85, textframe[1] - 300, 1 ,0 ,0);
 		if (gc.getclear())
+		{
 			draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "Game Clear", textframe[0] - 85, textframe[1] - 300, 0, 1, 0);
+			draw_characters(GLUT_BITMAP_HELVETICA_18, "PLAY TIME    :        sec", textframe[0] - 110, textframe[1] - 330, 0.5, 1, 0);
+			char char_playtime[8] = { 0, };	_itoa_s(playtime, char_playtime, 10);
+			draw_characters(GLUT_BITMAP_HELVETICA_18, char_playtime , textframe[0] + 20, textframe[1] - 330, 0.5, 1, 0);
+		}
 
 		draw_characters(GLUT_BITMAP_HELVETICA_18, "HIGHSCORE : ", textframe[0] - 110, textframe[1] - 350, 1, 1, 0);
 		char char_highscore[8] = { 0, };	_itoa_s(highscore, char_highscore, 10);
 		draw_characters(GLUT_BITMAP_HELVETICA_18, char_highscore, textframe[0] + 20, textframe[1]- 350, 1, 1, 0);
 		
 		static int i;
-		if ((gc.getclear() or spheres[0].getMTL() == gameovermtl) && i<180)
+		if ((gc.getclear() or go.getover()) && i<180)
 			draw_characters(GLUT_BITMAP_HELVETICA_18, "Press Enter to Restart", textframe[0] - 120, textframe[1] - 400 ,0,1,1);
 		if (i >= 360)
 			i = 0;
 		i++;
 	}
-
 	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, "SCORE : ", textframe[0] -250, textframe[1]+20, 1, 1, 1);
 	char char_score[8] = { 0, };	_itoa_s(score, char_score, 10);
 	draw_characters(GLUT_BITMAP_TIMES_ROMAN_24, char_score, textframe[0] - 150, textframe[1] + 20, 1, 1, 1);
